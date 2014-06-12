@@ -460,6 +460,11 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     return YES;
 }
 
+- (BOOL)canHide
+{
+    return !self.attachedToMenuBar;
+}
+
 - (void)applicationDidChangeActiveStatus:(NSNotification *)aNotification
 {
     [[self.contentView superview] setNeedsDisplayInRect:[self titleBarRect]];
@@ -499,6 +504,9 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 
 - (void)makeKeyAndOrderFront:(id)sender
 {
+    if (!(self.styleMask & NSNonactivatingPanelMask))
+        [NSApp activateIgnoringOtherApps:YES];
+    
     if (self.attachedToMenuBar)
     {
         [self setFrameOrigin:[self originForAttachedState]];
@@ -885,7 +893,6 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     }
     else
     {
-        [NSApp activateIgnoringOtherApps:YES];
         [self.menuBarWindow makeKeyAndOrderFront:self];
     }
 }

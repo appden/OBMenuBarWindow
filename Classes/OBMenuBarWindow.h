@@ -39,7 +39,7 @@
  *
  * See [OBMenuBarWindow on GitHub](https://github.com/obolton/OBMenuBarWindow) for more information.
  */
-@interface OBMenuBarWindow : NSWindow
+@interface OBMenuBarWindow : NSPanel
 
 ///---------------------
 /// @name Menu bar icon
