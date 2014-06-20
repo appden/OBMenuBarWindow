@@ -865,6 +865,13 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     NSRectFill(separatorRect);
 }
 
+- (void)drawMenuBarIconInRect:(NSRect)rect highlighted:(BOOL)highlighted
+{
+    NSImage *icon = (highlighted && self.highlightedMenuBarIcon) ? self.highlightedMenuBarIcon : self.menuBarIcon;
+    
+    [icon drawInRect:rect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
+}
+
 @end
 
 #pragma mark -
@@ -911,27 +918,14 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
         [[NSColor selectedMenuItemColor] set];
         NSRectFill([self bounds]);
     }
-    if (self.menuBarWindow && self.menuBarWindow.menuBarIcon)
+    if (self.menuBarWindow)
     {
         NSRect rect = NSMakeRect([self bounds].origin.x + 3,
                                  [self bounds].origin.y,
                                  [self bounds].size.width - 6,
                                  [self bounds].size.height);
         
-        if (self.highlighted && self.menuBarWindow.highlightedMenuBarIcon)
-        {
-            [self.menuBarWindow.highlightedMenuBarIcon drawInRect:rect
-                                                         fromRect:NSZeroRect
-                                                        operation:NSCompositeSourceOver
-                                                         fraction:1.0];
-        }
-        else
-        {
-            [self.menuBarWindow.menuBarIcon drawInRect:rect
-                                              fromRect:NSZeroRect
-                                             operation:NSCompositeSourceOver
-                                              fraction:1.0];
-        }
+        [self.menuBarWindow drawMenuBarIconInRect:rect highlighted:self.highlighted];
     }
 }
 

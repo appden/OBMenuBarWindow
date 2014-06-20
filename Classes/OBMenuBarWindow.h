@@ -122,6 +122,15 @@
  */
 @property (readonly) NSView *toolbarView;
 
+///------------------------
+/// @name Protected methods
+///------------------------
+
+/**
+ * By default, this will draw the menuBarIcon or highlightedMenuBarIcon depending on the `highlighted` state.
+ */
+- (void)drawMenuBarIconInRect:(NSRect)rect highlighted:(BOOL)highlighted;
+
 @end
 
 /**
