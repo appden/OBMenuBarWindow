@@ -904,6 +904,11 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     }
 }
 
+- (void)rightMouseDown:(NSEvent *)theEvent
+{
+    [self mouseDown:theEvent];
+}
+
 - (void)mouseUp:(NSEvent *)theEvent
 {
     self.highlighted = NO;
