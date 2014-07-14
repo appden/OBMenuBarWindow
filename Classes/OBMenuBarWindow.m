@@ -290,6 +290,11 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
         [self setFrame:newFrame display:YES];
     }
     
+    if (self.isVisible)
+    {
+        self.statusItemView.highlighted = isAttached;
+    }
+    
     // Set whether the window is opaque (this affects the shadow)
     [self setOpaque:!isAttached];
     
@@ -505,10 +510,12 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 - (void)makeKeyAndOrderFront:(id)sender
 {
     if (!(self.styleMask & NSNonactivatingPanelMask))
+    {
         [NSApp activateIgnoringOtherApps:YES];
-    
+    }
     if (self.attachedToMenuBar)
     {
+        self.statusItemView.highlighted = YES;
         [self setFrameOrigin:[self originForAttachedState]];
     }
     [super makeKeyAndOrderFront:sender];
@@ -516,6 +523,8 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 
 - (void)orderOut:(id)sender
 {
+    self.statusItemView.highlighted = NO;
+    
     [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
         [context setDuration:0.1];
         [self.animator setAlphaValue:0];
@@ -878,14 +887,11 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 
 @implementation OBMenuBarWindowIconView
 
-@synthesize menuBarWindow;
-@synthesize highlighted;
-
 #pragma mark - Highlighting
 
 - (void)setHighlighted:(BOOL)flag
 {
-    highlighted = flag;
+    _highlighted = flag;
     [self setNeedsDisplay:YES];
 }
 
@@ -911,7 +917,10 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 
 - (void)mouseUp:(NSEvent *)theEvent
 {
-    self.highlighted = NO;
+    if (!self.menuBarWindow.attachedToMenuBar || !self.menuBarWindow.isVisible)
+    {
+        self.highlighted = NO;
+    }
 }
 
 #pragma mark - Drawing
