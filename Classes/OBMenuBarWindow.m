@@ -280,14 +280,12 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     {
         NSRect newFrame = self.frame;
         newFrame.size.height += self.arrowSize.height;
-        newFrame.origin.y -= self.arrowSize.height;
         [self setFrame:newFrame display:YES];
     }
     else
     {
         NSRect newFrame = self.frame;
         newFrame.size.height -= self.arrowSize.height;
-        newFrame.origin.y += self.arrowSize.height;
         [self setFrame:newFrame display:YES];
     }
     
@@ -351,11 +349,6 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
                 [[minimiseButton animator] setAlphaValue:1.0];
                 [[zoomButton animator] setAlphaValue:1.0];
             } completionHandler:nil];
-        }
-        if (!self.isDragging)
-        {
-            [self setFrameOrigin:NSMakePoint(self.frame.origin.x,
-                                             self.frame.origin.y - self.snapDistance - 10)];
         }
     }
     
