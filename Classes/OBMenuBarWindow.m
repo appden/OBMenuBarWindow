@@ -46,6 +46,7 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 @property (nonatomic, assign) BOOL isDragging;
 @property (nonatomic, assign) BOOL resizeRight;
 @property (nonatomic, assign) BOOL hideControls;
+@property (nonatomic, assign) BOOL preventFrameChange;
 @property (nonatomic, assign) NSPoint dragStartLocation;
 @property (nonatomic, assign) NSPoint resizeStartLocation;
 @property (nonatomic, assign) NSRect dragStartFrame;
@@ -637,8 +638,19 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     }
 }
 
+- (void)setStyleMask:(NSUInteger)styleMask
+{
+    self.preventFrameChange = YES;
+    [super setStyleMask:styleMask];
+    self.preventFrameChange = NO;
+}
+
 - (void)setFrame:(NSRect)frameRect display:(BOOL)flag
 {
+    if (self.preventFrameChange)
+    {
+        return;
+    }
     if ([self inLiveResize] && self.attachedToMenuBar)
     {
         NSPoint mouseLocation = [self convertBaseToScreen:[self mouseLocationOutsideOfEventStream]];
