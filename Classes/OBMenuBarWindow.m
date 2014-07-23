@@ -41,6 +41,9 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 
 @end
 
+@interface OBMenuBarWindowToolbarView : NSView
+@end
+
 @interface OBMenuBarWindow ()
 
 @property (nonatomic, assign) BOOL isDragging;
@@ -161,7 +164,7 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     // Create the toolbar view
     NSRect toolbarRect = [self toolbarRect];
     NSView *themeFrame = [self.contentView superview];
-    _toolbarView = [[NSView alloc] initWithFrame:toolbarRect];
+    _toolbarView = [[OBMenuBarWindowToolbarView alloc] initWithFrame:toolbarRect];
     [_toolbarView setAutoresizingMask:(NSViewWidthSizable | NSViewMinYMargin)];
     
     // Create the title text field
@@ -564,15 +567,12 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 
 - (void)mouseDragged:(NSEvent *)theEvent
 {
-    if ([theEvent type] == NSLeftMouseDragged)
+    if ([theEvent type] == NSLeftMouseDragged && self.isDragging)
     {
         NSPoint newLocation = [NSEvent mouseLocation];
-        if (self.isDragging)
-        {
-            CGFloat originX = self.dragStartFrame.origin.x + newLocation.x - self.dragStartLocation.x;
-            CGFloat originY = self.dragStartFrame.origin.y + newLocation.y - self.dragStartLocation.y;
-            [self setFrameOrigin:NSMakePoint(originX, originY)];
-        }
+        CGFloat originX = self.dragStartFrame.origin.x + newLocation.x - self.dragStartLocation.x;
+        CGFloat originY = self.dragStartFrame.origin.y + newLocation.y - self.dragStartLocation.y;
+        [self setFrameOrigin:NSMakePoint(originX, originY)];
     }
 }
 
@@ -946,6 +946,17 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
         
         [self.menuBarWindow drawMenuBarIconInRect:rect highlighted:self.highlighted];
     }
+}
+
+@end
+
+#pragma mark -
+
+@implementation OBMenuBarWindowToolbarView
+
+- (BOOL)acceptsFirstMouse:(NSEvent *)theEvent
+{
+    return YES;
 }
 
 @end
