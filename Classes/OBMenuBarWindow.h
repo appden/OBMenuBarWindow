@@ -65,7 +65,7 @@
 /**
  * The status item associated with the window.
  */
-@property (readonly) NSStatusItem *statusItem;
+@property (nonatomic, readonly) NSStatusItem *statusItem;
 
 ///---------------------------------
 /// @name Attaching to the menu bar
@@ -115,12 +115,12 @@
 /**
  * The window's title text field.
  */
-@property (readonly) NSTextField *titleTextField;
+@property (nonatomic, readonly) NSTextField *titleTextField;
 
 /**
  * The view containing the window's toolbar items. You can access this view to add additional controls to the titlebar.
  */
-@property (readonly) NSView *toolbarView;
+@property (nonatomic, readonly) NSView *toolbarView;
 
 ///------------------------
 /// @name Protected methods
