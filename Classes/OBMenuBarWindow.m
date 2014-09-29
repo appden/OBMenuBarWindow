@@ -936,20 +936,8 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 
 - (void)drawRect:(NSRect)dirtyRect
 {
-    if (self.highlighted)
-    {
-        [[NSColor selectedMenuItemColor] set];
-        NSRectFill([self bounds]);
-    }
-    if (self.menuBarWindow)
-    {
-        NSRect rect = NSMakeRect([self bounds].origin.x + 3,
-                                 [self bounds].origin.y,
-                                 [self bounds].size.width - 6,
-                                 [self bounds].size.height);
-        
-        [self.menuBarWindow drawMenuBarIconInRect:rect highlighted:self.highlighted];
-    }
+    [self.menuBarWindow.statusItem drawStatusBarBackgroundInRect:self.bounds withHighlight:self.highlighted];
+    [self.menuBarWindow drawMenuBarIconInRect:NSInsetRect(self.bounds, 3, 0) highlighted:self.highlighted];
 }
 
 @end
