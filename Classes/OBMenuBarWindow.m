@@ -31,6 +31,10 @@
 #import "OBMenuBarWindow.h"
 #import <objc/runtime.h>
 
+#ifndef NSAppKitVersionNumber10_9
+#define NSAppKitVersionNumber10_9 1265
+#endif
+
 NSString * const OBMenuBarWindowDidAttachToMenuBar = @"OBMenuBarWindowDidAttachToMenuBar";
 NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetachFromMenuBar";
 
@@ -829,7 +833,7 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     NSRectFill(titleBarRect);
     
     // Draw some subtle noise to the titlebar if the window is the key window
-    if ([window isKeyWindow])
+    if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_9 && [window isKeyWindow])
     {
         [[NSColor colorWithPatternImage:[window noiseImage]] set];
         NSRectFillUsingOperation(headingRect, NSCompositeSourceOver);
