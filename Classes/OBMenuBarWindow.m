@@ -129,14 +129,6 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
                    name:NSWindowWillStartLiveResizeNotification
                  object:self];
     [center addObserver:self
-               selector:@selector(windowWillBeginSheet:)
-                   name:NSWindowWillBeginSheetNotification
-                 object:self];
-    [center addObserver:self
-               selector:@selector(windowDidEndSheet:)
-                   name:NSWindowDidEndSheetNotification
-                 object:self];
-    [center addObserver:self
                selector:@selector(windowDidBecomeKey:)
                    name:NSWindowDidBecomeKeyNotification
                  object:self];
