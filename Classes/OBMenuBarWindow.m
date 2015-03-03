@@ -630,7 +630,10 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 - (void)setStyleMask:(NSUInteger)styleMask
 {
     self.preventFrameChange = YES;
+    
     [super setStyleMask:styleMask];
+    [self layoutContent];
+    
     self.preventFrameChange = NO;
 }
 
