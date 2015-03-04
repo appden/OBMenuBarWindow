@@ -146,7 +146,8 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
                  object:nil];
     
     // Get window's frame view class
-    id class = [[[self contentView] superview] class];
+    NSView *frameView = [self.contentView superview];
+    Class class = [frameView class];
     
     // Add the new drawRect: to the frame class
     Method m0 = class_getInstanceMethod([self class], @selector(drawRect:));
@@ -159,7 +160,6 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     
     // Create the toolbar view
     NSRect toolbarRect = [self toolbarRect];
-    NSView *themeFrame = [self.contentView superview];
     _toolbarView = [[OBMenuBarWindowToolbarView alloc] initWithFrame:toolbarRect];
     [_toolbarView setAutoresizingMask:(NSViewWidthSizable | NSViewMinYMargin)];
     
@@ -180,7 +180,13 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     [_toolbarView addSubview:_titleTextField];
     
     // Lay out the content
-    [themeFrame addSubview:_toolbarView];
+    [frameView addSubview:_toolbarView];
+    [self layoutContent];
+}
+
+- (void)setContentView:(id)contentView
+{
+    [super setContentView:contentView];
     [self layoutContent];
 }
 
@@ -196,25 +202,30 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     CGFloat buttonHeight = closeButton.frame.size.height;
     NSRect toolbarRect = [self toolbarRect];
     CGFloat buttonOriginY = floor(toolbarRect.origin.y + (toolbarRect.size.height - buttonHeight) / 2.0);
+    
     [closeButton setFrame:NSMakeRect(7, buttonOriginY, buttonWidth, buttonHeight)];
     [minimiseButton setFrame:NSMakeRect(27, buttonOriginY, buttonWidth, buttonHeight)];
     [zoomButton setFrame:NSMakeRect(47, buttonOriginY, buttonWidth, buttonHeight)];
-    [[self.contentView superview] viewWillStartLiveResize];
-    [[self.contentView superview] viewDidEndLiveResize];
+    
+    NSView *contentView = self.contentView;
+    NSView *frameView = [contentView superview];
+    
+    [frameView viewWillStartLiveResize];
+    [frameView viewDidEndLiveResize];
     
     // Position the toolbar view
-    [self.toolbarView setFrame:[self toolbarRect]];
+    [self.toolbarView setFrame:toolbarRect];
     
     // Position the content view
-    NSRect contentViewFrame = [self.contentView frame];
+    NSRect contentViewFrame = contentView.frame;
     CGFloat currentTopMargin = NSHeight(self.frame) - NSHeight(contentViewFrame);
     CGFloat titleBarHeight = self.titleBarHeight + (self.attachedToMenuBar ? self.arrowSize.height : 0) + 1;
     CGFloat delta = titleBarHeight - currentTopMargin;
     contentViewFrame.size.height -= delta;
-    [self.contentView setFrame:contentViewFrame];
+    [contentView setFrame:contentViewFrame];
     
     // Redraw the theme frame
-    [[self.contentView superview] setNeedsDisplayInRect:[self titleBarRect]];
+    [frameView setNeedsDisplayInRect:[self titleBarRect]];
 }
 
 #pragma mark - Menu bar icon
