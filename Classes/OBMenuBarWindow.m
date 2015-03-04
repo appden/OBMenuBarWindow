@@ -320,7 +320,7 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
         {
             self.hideControls = YES;
             [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
-                [context setDuration:0.15];
+                [context setDuration:(self.isVisible ? 0.15 : 0.0)];
                 [[closeButton animator] setAlphaValue:0.0];
                 [[minimiseButton animator] setAlphaValue:0.0];
                 [[zoomButton animator] setAlphaValue:0.0];
@@ -354,7 +354,7 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
             [minimiseButton setHidden:NO];
             [zoomButton setHidden:NO];
             [NSAnimationContext runAnimationGroup:^(NSAnimationContext *context) {
-                [context setDuration:0.15];
+                [context setDuration:(self.isVisible ? 0.15 : 0.0)];
                 [[closeButton animator] setAlphaValue:1.0];
                 [[minimiseButton animator] setAlphaValue:1.0];
                 [[zoomButton animator] setAlphaValue:1.0];
