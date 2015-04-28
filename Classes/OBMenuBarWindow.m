@@ -219,7 +219,7 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     // Position the content view
     NSRect contentViewFrame = contentView.frame;
     CGFloat currentTopMargin = NSHeight(self.frame) - NSHeight(contentViewFrame);
-    CGFloat titleBarHeight = self.titleBarHeight + (self.attachedToMenuBar ? self.arrowSize.height : 0) + 1;
+    CGFloat titleBarHeight = self.titleBarHeight + (self.attachedToMenuBar ? self.arrowSize.height : 0);
     CGFloat delta = titleBarHeight - currentTopMargin;
     contentViewFrame.size.height -= delta;
     [contentView setFrame:contentViewFrame];
@@ -757,6 +757,8 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     CGFloat cornerRadius = 4.0;
     
     BOOL isAttached = window.attachedToMenuBar;
+    BOOL isActive = isAttached || [window isKeyWindow];
+    BOOL isYosemite = floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_9;
     
     // Draw the window background
     [[NSColor windowBackgroundColor] set];
@@ -770,17 +772,8 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     // Create the window shape
     NSPoint arrowPointLeft = NSMakePoint(originX + (width - arrowWidth) / 2.0,
                                          originY + height - (isAttached ? arrowHeight : 0));
-    NSPoint arrowPointMiddle;
-    if (window.attachedToMenuBar)
-    {
-        arrowPointMiddle = NSMakePoint(originX + width / 2.0,
-                                       originY + height);
-    }
-    else
-    {
-        arrowPointMiddle = NSMakePoint(originX + width / 2.0,
-                                       originY + height - (isAttached ? arrowHeight : 0));
-    }
+    NSPoint arrowPointMiddle = NSMakePoint(originX + width / 2.0,
+                                           originY + height);
     NSPoint arrowPointRight = NSMakePoint(originX + (width + arrowWidth) / 2.0,
                                           originY + height - (isAttached ? arrowHeight : 0));
     NSPoint topLeft = NSMakePoint(originX,
@@ -820,18 +813,21 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
                                      titleBarHeight + arrowHeight);
     
     // Colors
-    NSColor *bottomColor, *topColor, *topColorTransparent;
-    if ([window isKeyWindow] || window.attachedToMenuBar)
+    NSColor *bottomColor, *topColor, *topColorTransparent, *separatorColor;
+    
+    if (isYosemite)
     {
-        bottomColor = [NSColor colorWithCalibratedWhite:0.690 alpha:1.0];
-        topColor = [NSColor colorWithCalibratedWhite:0.910 alpha:1.0];
-        topColorTransparent = [NSColor colorWithCalibratedWhite:0.910 alpha:0.0];
+        bottomColor = [NSColor colorWithDeviceWhite:(isActive ? 211.0 : 246.0) / 255.0 alpha:1.0];
+        topColor = [NSColor colorWithDeviceWhite:(isActive ? 240.0 : 250.0) / 255.0 alpha:1.0];
+        topColorTransparent = [NSColor colorWithDeviceWhite:(isActive ? 240.0 : 250.0) / 255.0 alpha:0.0];
+        separatorColor = [NSColor colorWithDeviceWhite:(isActive ? 150.0 : 181.0) / 255.0 alpha:1.0];
     }
     else
     {
-        bottomColor = [NSColor colorWithCalibratedWhite:0.85 alpha:1.0];
-        topColor = [NSColor colorWithCalibratedWhite:0.93 alpha:1.0];
-        topColorTransparent = [NSColor colorWithCalibratedWhite:0.93 alpha:0.0];
+        bottomColor = [NSColor colorWithCalibratedWhite:(isActive ? 0.69 : 0.85) alpha:1.0];
+        topColor = [NSColor colorWithCalibratedWhite:(isActive ? 0.91 : 0.93) alpha:1.0];
+        topColorTransparent = [NSColor colorWithCalibratedWhite:(isActive ? 0.91 : 0.93) alpha:0.0];
+        separatorColor = [NSColor colorWithCalibratedWhite:0.5 alpha:1.0];
     }
     
     // Fill the titlebar with the base colour
@@ -839,7 +835,7 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     NSRectFill(titleBarRect);
     
     // Draw some subtle noise to the titlebar if the window is the key window
-    if (floor(NSAppKitVersionNumber) <= NSAppKitVersionNumber10_9 && [window isKeyWindow])
+    if (isActive && !isYosemite)
     {
         [[NSColor colorWithPatternImage:[window noiseImage]] set];
         NSRectFillUsingOperation(headingRect, NSCompositeSourceOver);
@@ -881,11 +877,9 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     [NSGraphicsContext restoreGraphicsState];
     
     // Draw separator line between the titlebar and the content view
-    [[NSColor colorWithCalibratedWhite:0.5 alpha:1.0] set];
-    NSRect separatorRect = NSMakeRect(originX,
-                                      originY + height - titleBarHeight - (isAttached ? arrowHeight : 0) - 1,
-                                      width,
-                                      1);
+    [separatorColor set];
+    
+    NSRect separatorRect = NSMakeRect(originX, originY + height - titleBarHeightWithArrow, width, 0.5);
     NSRectFill(separatorRect);
 }
 
