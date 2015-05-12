@@ -284,20 +284,20 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     {
         return;
     }
+    
     _attachedToMenuBar = isAttached;
     
-    if (isAttached)
+    NSRect newFrame = self.frame;
+    CGFloat heightDelta = (isAttached ? 1.0 : -1.0) * self.arrowSize.height;
+    newFrame.size.height += heightDelta;
+    
+    if (isAttached && !self.isDragging)
     {
-        NSRect newFrame = self.frame;
-        newFrame.size.height += self.arrowSize.height;
-        [self setFrame:newFrame display:YES];
+        newFrame.origin = [self originForAttachedState];
+        newFrame.origin.y -= heightDelta;
     }
-    else
-    {
-        NSRect newFrame = self.frame;
-        newFrame.size.height -= self.arrowSize.height;
-        [self setFrame:newFrame display:YES];
-    }
+    
+    [self setFrame:newFrame display:YES];
     
     if (self.isVisible)
     {
@@ -314,6 +314,7 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     NSButton *closeButton = [self standardWindowButton:NSWindowCloseButton];
     NSButton *minimiseButton = [self standardWindowButton:NSWindowMiniaturizeButton];
     NSButton *zoomButton = [self standardWindowButton:NSWindowZoomButton];
+    
     if (isAttached)
     {
         if (self.hideWindowControlsWhenAttached)
@@ -337,10 +338,6 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
                 }
             }];
         }
-        if (!self.isDragging)
-        {
-            [self setFrameOrigin:[self originForAttachedState]];
-        }
     }
     else
     {
@@ -363,6 +360,7 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     }
     
     [self setLevel:(isAttached ? NSPopUpMenuWindowLevel : NSNormalWindowLevel)];
+    
     if (self.delegate != nil)
     {
         if (isAttached && [self.delegate respondsToSelector:@selector(windowDidAttachToMenuBar:)])
@@ -380,7 +378,7 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
                                                                 object:self];
         }
     }
-    [self layoutContent];
+    
     [[self.contentView superview] setNeedsDisplay:YES];
     [self invalidateShadow];
 }
@@ -520,9 +518,14 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     if (self.attachedToMenuBar)
     {
         self.statusItemView.highlighted = YES;
+        
         [self setFrameOrigin:[self originForAttachedState]];
     }
+    
+    // AppKit sometimes tries to move it up by one pixel here.
+    self.preventFrameChange = YES;
     [super makeKeyAndOrderFront:sender];
+    self.preventFrameChange = NO;
 }
 
 - (void)orderOut:(id)sender
@@ -612,21 +615,35 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 {
     if (![self inLiveResize] && self.hasMenuBarIcon)
     {
-        NSRect frame = [self frame];
-        NSPoint arrowPoint = NSMakePoint(NSMidX(frame), NSMaxY(frame));
-        NSRect statusItemFrame = [[self.statusItemView window] frame];
-        NSPoint statusItemPoint = NSMakePoint(NSMidX(statusItemFrame), NSMinY(statusItemFrame));
-        double distance = sqrt(pow(arrowPoint.x - statusItemPoint.x, 2) + pow(arrowPoint.y - statusItemPoint.y, 2));
-        if (!self.isDetachable || distance <= self.snapDistance)
+        BOOL attachToMenuBar = !self.isDetachable;
+        
+        if (!attachToMenuBar)
         {
-            [self setFrameOrigin:[self originForAttachedState]];
-            self.attachedToMenuBar = YES;
+            NSRect frame = [self frame];
+            NSPoint arrowPoint = NSMakePoint(NSMidX(frame), NSMaxY(frame));
+            NSRect statusItemFrame = [[self.statusItemView window] frame];
+            NSPoint statusItemPoint = NSMakePoint(NSMidX(statusItemFrame), NSMinY(statusItemFrame));
+            double distance = sqrt(pow(arrowPoint.x - statusItemPoint.x, 2) + pow(arrowPoint.y - statusItemPoint.y, 2));
+            
+            attachToMenuBar = distance <= self.snapDistance;
         }
-        else
+        
+        self.attachedToMenuBar = attachToMenuBar;
+        
+        if (attachToMenuBar)
         {
-            self.attachedToMenuBar = NO;
+            NSPoint origin = [self originForAttachedState];
+            
+            if (!NSEqualPoints(self.frame.origin, origin))
+            {
+                [self setFrameOrigin:origin];
+                
+                // Changing the origin will post this notification again.
+                return;
+            }
         }
     }
+    
     [self layoutContent];
 }
 
@@ -654,10 +671,12 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     {
         return;
     }
+    
     if ([self inLiveResize] && self.attachedToMenuBar)
     {
-        NSPoint mouseLocation = [self convertBaseToScreen:[self mouseLocationOutsideOfEventStream]];
+        NSPoint mouseLocation = [NSEvent mouseLocation];
         NSRect newFrame = self.resizeStartFrame;
+        
         if (frameRect.size.width != self.resizeStartFrame.size.width)
         {
             CGFloat deltaWidth = (self.resizeRight ? mouseLocation.x - self.resizeStartLocation.x : self.resizeStartLocation.x - mouseLocation.x);
@@ -682,12 +701,15 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
             newFrame.size.height = frameRect.size.height;
         }
         
-        [super setFrame:newFrame display:YES];
+        frameRect = newFrame;
+        flag = YES;
     }
-    else
+    else if (self.attachedToMenuBar && self.statusItemView)
     {
-        [super setFrame:frameRect display:flag];
+        frameRect.origin = [self originForAttachedState];
     }
+    
+    [super setFrame:frameRect display:flag];
 }
 
 #pragma mark - Drawing
