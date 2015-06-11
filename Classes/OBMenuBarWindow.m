@@ -359,7 +359,8 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
         }
     }
     
-    [self setLevel:(isAttached ? NSPopUpMenuWindowLevel : NSNormalWindowLevel)];
+    // Highest window level where the IME suggestion bubble will still appear above it.
+    [self setLevel:(isAttached ? NSTornOffMenuWindowLevel : NSNormalWindowLevel)];
     
     if (self.delegate != nil)
     {
