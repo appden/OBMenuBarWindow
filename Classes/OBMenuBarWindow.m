@@ -306,7 +306,7 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     
     // Set whether the window is opaque (this affects the shadow)
     [self setOpaque:!isAttached];
-    
+
     // Reposition the content
     [self layoutContent];
     
@@ -731,7 +731,7 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
         unsigned char grey;
         for (NSUInteger i = 0; i < bytes; i += 4)
         {
-            grey = (unsigned char)(rand() % 256);
+            grey = (unsigned char)arc4random_uniform(256);
             data[i] = grey;
             data[i + 1] = grey;
             data[i + 2] = grey;
@@ -791,7 +791,7 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     CGFloat titleBarHeightWithArrow = titleBarHeight + (isAttached ? arrowHeight : 0);
     [[NSColor clearColor] set];
     NSRectFillUsingOperation([window titleBarRect], NSCompositeClear);
-    
+
     // Create the window shape
     NSPoint arrowPointLeft = NSMakePoint(originX + (width - arrowWidth) / 2.0,
                                          originY + height - (isAttached ? arrowHeight : 0));
