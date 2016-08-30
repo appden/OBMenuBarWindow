@@ -28,7 +28,7 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#import <AppKit/AppKit.h>
+@import AppKit;
 
 /**
  * `OBMenuBarWindow` is an `NSWindow` subclass that adds the ability to attach the window to an icon in the menu bar.

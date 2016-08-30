@@ -28,12 +28,9 @@
 //  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 //
 
-#import "OBMenuBarWindow.h"
-#import <objc/runtime.h>
+@import ObjectiveC;
 
-#ifndef NSAppKitVersionNumber10_9
-#define NSAppKitVersionNumber10_9 1265
-#endif
+#import "OBMenuBarWindow.h"
 
 NSString * const OBMenuBarWindowDidAttachToMenuBar = @"OBMenuBarWindowDidAttachToMenuBar";
 NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetachFromMenuBar";
@@ -58,7 +55,6 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 @property (nonatomic, assign) NSPoint resizeStartLocation;
 @property (nonatomic, assign) NSRect dragStartFrame;
 @property (nonatomic, assign) NSRect resizeStartFrame;
-@property (nonatomic, strong) NSImage *noiseImage;
 @property (nonatomic, strong) OBMenuBarWindowIconView *statusItemView;
 
 - (void)initialSetup;
@@ -73,7 +69,6 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 - (void)windowDidMove:(NSNotification *)aNotification;
 - (void)statusItemViewDidMove:(NSNotification *)aNotification;
 - (NSWindow *)window;
-- (NSImage *)noiseImage;
 - (void)drawRectOriginal:(NSRect)dirtyRect;
 
 @end
@@ -720,40 +715,6 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     return self;
 }
 
-- (NSImage *)noiseImage
-{
-    if (!_noiseImage)
-    {
-        size_t dimension = 100;
-        size_t bytes = dimension * dimension * 4;
-        CGColorSpaceRef colorSpaceRef = CGColorSpaceCreateWithName(kCGColorSpaceGenericRGB);
-        unsigned char *data = malloc(bytes);
-        unsigned char grey;
-        for (NSUInteger i = 0; i < bytes; i += 4)
-        {
-            grey = (unsigned char)arc4random_uniform(256);
-            data[i] = grey;
-            data[i + 1] = grey;
-            data[i + 2] = grey;
-            data[i + 3] = 6;
-        }
-        CGContextRef contextRef = CGBitmapContextCreate(data,
-                                                        dimension,
-                                                        dimension,
-                                                        8,
-                                                        dimension * 4,
-                                                        colorSpaceRef,
-                                                        (CGBitmapInfo)kCGImageAlphaPremultipliedLast);
-        CGImageRef imageRef = CGBitmapContextCreateImage(contextRef);
-        _noiseImage = [[NSImage alloc] initWithCGImage:imageRef size:NSMakeSize(dimension, dimension)];
-        CGImageRelease(imageRef);
-        CGContextRelease(contextRef);
-        free(data);
-        CGColorSpaceRelease(colorSpaceRef);
-    }
-    return _noiseImage;
-}
-
 - (void)drawRectOriginal:(NSRect)dirtyRect
 {
     // Do nothing
@@ -781,12 +742,11 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     
     BOOL isAttached = window.attachedToMenuBar;
     BOOL isActive = isAttached || [window isKeyWindow];
-    BOOL isYosemite = floor(NSAppKitVersionNumber) > NSAppKitVersionNumber10_9;
     
     // Draw the window background
     [[NSColor windowBackgroundColor] set];
     NSRectFill(dirtyRect);
-    
+
     // Erase the standard title bar
     CGFloat titleBarHeightWithArrow = titleBarHeight + (isAttached ? arrowHeight : 0);
     [[NSColor clearColor] set];
@@ -836,33 +796,14 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
                                      titleBarHeight + arrowHeight);
     
     // Colors
-    NSColor *bottomColor, *topColor, *topColorTransparent, *separatorColor;
-    
-    if (isYosemite)
-    {
-        bottomColor = [NSColor colorWithDeviceWhite:(isActive ? 211.0 : 246.0) / 255.0 alpha:1.0];
-        topColor = [NSColor colorWithDeviceWhite:(isActive ? 240.0 : 250.0) / 255.0 alpha:1.0];
-        topColorTransparent = [NSColor colorWithDeviceWhite:(isActive ? 240.0 : 250.0) / 255.0 alpha:0.0];
-        separatorColor = [NSColor colorWithDeviceWhite:(isActive ? 150.0 : 181.0) / 255.0 alpha:1.0];
-    }
-    else
-    {
-        bottomColor = [NSColor colorWithCalibratedWhite:(isActive ? 0.69 : 0.85) alpha:1.0];
-        topColor = [NSColor colorWithCalibratedWhite:(isActive ? 0.91 : 0.93) alpha:1.0];
-        topColorTransparent = [NSColor colorWithCalibratedWhite:(isActive ? 0.91 : 0.93) alpha:0.0];
-        separatorColor = [NSColor colorWithCalibratedWhite:0.5 alpha:1.0];
-    }
+    NSColor *bottomColor = [NSColor colorWithDeviceWhite:(isActive ? 211.0 : 246.0) / 255.0 alpha:1.0];
+    NSColor *topColor = [NSColor colorWithDeviceWhite:(isActive ? 240.0 : 250.0) / 255.0 alpha:1.0];
+    NSColor *topColorTransparent = [NSColor colorWithDeviceWhite:(isActive ? 240.0 : 250.0) / 255.0 alpha:0.0];
+    NSColor *separatorColor = [NSColor colorWithDeviceWhite:(isActive ? 150.0 : 181.0) / 255.0 alpha:1.0];
     
     // Fill the titlebar with the base colour
     [bottomColor set];
     NSRectFill(titleBarRect);
-    
-    // Draw some subtle noise to the titlebar if the window is the key window
-    if (isActive && !isYosemite)
-    {
-        [[NSColor colorWithPatternImage:[window noiseImage]] set];
-        NSRectFillUsingOperation(headingRect, NSCompositeSourceOver);
-    }
     
     // Draw the highlight
     NSGradient *headingGradient = [[NSGradient alloc] initWithStartingColor:topColorTransparent
