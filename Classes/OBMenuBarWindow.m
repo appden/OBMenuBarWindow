@@ -30,6 +30,7 @@
 
 #import "OBMenuBarWindow.h"
 #import <objc/runtime.h>
+#import <Availability.h>
 
 #ifndef NSAppKitVersionNumber10_9
 #define NSAppKitVersionNumber10_9 1265
@@ -75,7 +76,8 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 - (NSWindow *)window;
 - (NSImage *)noiseImage;
 - (void)drawRectOriginal:(NSRect)dirtyRect;
-
+- (NSPoint)convertPointFromBaseToScreen:(NSWindow *)window point:(NSPoint)windowPoint;
+- (NSPoint)convertPointFromScreenToBase:(NSPoint)screenPoint window:(NSWindow *)window;
 @end
 
 @implementation OBMenuBarWindow
@@ -597,7 +599,20 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
 - (void)windowWillStartLiveResize:(NSNotification *)aNotification
 {
     self.resizeStartFrame = self.frame;
+    
+
+    // Depreciation fix
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= MAC_OS_X_VERSION_10_7
+    self.resizeStartLocation = [self convertPointFromBaseToScreen:self point:[self mouseLocationOutsideOfEventStream]];
+#else
+    // Depreciated as of 10.7: convertBaseToScreen
     self.resizeStartLocation = [self convertBaseToScreen:[self mouseLocationOutsideOfEventStream]];
+#endif
+
+    
+    
+    
+    
     self.resizeRight = ([self mouseLocationOutsideOfEventStream].x > self.frame.size.width / 2.0);
 }
 
@@ -912,6 +927,29 @@ NSString * const OBMenuBarWindowDidDetachFromMenuBar = @"OBMenuBarWindowDidDetac
     
     [icon drawInRect:rect fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1.0];
 }
+
+#pragma mark - Depreciation workarounds
+- (NSPoint)convertPointFromBaseToScreen:(NSWindow *)window point:(NSPoint)windowPoint {
+    assert(window != nil && "ConvertPointFromBaseToScreen, window parameter is nil");
+    NSRect tmpRect = {};
+    tmpRect.origin = windowPoint;
+    tmpRect.size = CGSizeMake(1., 1.);
+    tmpRect = [window convertRectToScreen : tmpRect];
+    
+    return tmpRect.origin;
+}
+
+- (NSPoint)convertPointFromScreenToBase:(NSPoint)screenPoint window:(NSWindow *)window {
+    assert(window != nil && "ConvertPointFromScreenToBase, window parameter is nil");
+    
+    NSRect tmpRect = {};
+    tmpRect.origin = screenPoint;
+    tmpRect.size = CGSizeMake(1., 1.);
+    tmpRect = [window convertRectFromScreen : tmpRect];
+    
+    return tmpRect.origin;
+}
+
 
 @end
 
